@@ -2,8 +2,8 @@ def call(Map config = [:]) {
     pipeline {
         agent any
         tools {
-            maven 'maven-3.9' 
-            jdk 'jdk-17'      
+            maven 'maven' 
+            jdk 'jdk'      
         }
         environment {
             DOCKER_IMAGE = "${config.dockerUser}/${config.appName}:${env.BUILD_NUMBER}"
