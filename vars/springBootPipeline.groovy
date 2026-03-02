@@ -17,7 +17,7 @@ def call(Map config = [:]) {
                 steps {
                     script {
                         //sh 'mvn clean package -DskipTests'
-                        sh "docker build -t ${DOCKER_IMAGE} ."
+                        sh "docker build -f ju.Dockerfile -t ${DOCKER_IMAGE} ."
                         withCredentials([usernamePassword(credentialsId: 'docker-hub-creds', passwordVariable: 'PASS', usernameVariable: 'USER')]) {
                             sh 'echo $PASS | docker login -u $USER --password-stdin'
                             sh 'docker push ${DOCKER_IMAGE}'
