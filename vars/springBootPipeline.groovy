@@ -22,6 +22,7 @@ def call(Map config = [:]) {
                             sh 'echo $PASS | docker login -u $USER --password-stdin'
                             sh 'docker push ${DOCKER_IMAGE}'
                         }
+                        sh "docker rmi ${DOCKER_IMAGE}"
                     }
                 }
             }
