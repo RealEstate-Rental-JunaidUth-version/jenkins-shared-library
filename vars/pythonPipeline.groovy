@@ -13,11 +13,9 @@ def call(Map config = [:]) {
                 when { branch 'main' }
                 steps {
                     script {
-                        // Define the global variable here so it is accessible in later stages
                         env.DOCKER_IMAGE = "${config.dockerUser}/${config.appName}:${env.BUILD_NUMBER}"
                         
                         withCredentials([string(credentialsId: 'Hug-Face', variable: 'TOKEN')]) {
-                            // Create and use virtual environment
                             sh 'python3 -m venv venv'
                             sh './venv/bin/pip install huggingface_hub'
                             
@@ -25,14 +23,19 @@ def call(Map config = [:]) {
                                 echo "Downloading ${file.name}..."
                                 sh "mkdir -p ${file.targetDir}"
                                 
-                                // Safely pass the token via environment variable
-                                withEnv(["TOKEN=${TOKEN}"]) {
+                                // Pass current loop variables into the environment for this specific 'sh' step
+                                withEnv([
+                                    "HF_REPO=${config.hfRepo}",
+                                    "FILE_NAME=${file.name}",
+                                    "TARGET_DIR=${file.targetDir}",
+                                    "TOKEN=${TOKEN}"
+                                ]) {
                                     sh '''
                                     ./venv/bin/python3 -c "from huggingface_hub import hf_hub_download; \
-                                    hf_hub_download(repo_id='${HF_REPO}', \
-                                    filename='${FILE_NAME}', \
+                                    hf_hub_download(repo_id='$HF_REPO', \
+                                    filename='$FILE_NAME', \
                                     token='$TOKEN', \
-                                    local_dir='${TARGET_DIR}', \
+                                    local_dir='$TARGET_DIR', \
                                     local_dir_use_symlinks=False)"
                                     '''
                                 }
