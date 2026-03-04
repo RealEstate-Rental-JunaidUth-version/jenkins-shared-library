@@ -13,9 +13,10 @@ def call(Map config = [:]) {
             stage('Download Models') {
                 when { branch 'main' }
                 steps {
-                    def dockerImage = "${config.dockerUser}/${config.appName}:${env.BUILD_NUMBER}"
+                    
                     withCredentials([string(credentialsId: 'Hug-Face', variable: 'TOKEN')]) {
                         script {
+                            def dockerImage = "${config.dockerUser}/${config.appName}:${env.BUILD_NUMBER}"
                             // Create a virtual environment
                             sh 'python3 -m venv venv'
                             
