@@ -5,7 +5,6 @@ def call(Map config = [:]) {
             stage('Lint & Test') {
                 steps { 
                     script {
-                        // 1. tests should exist here
                         sh 'echo "Running linting and tests..."'
                     }
                 }
@@ -13,28 +12,30 @@ def call(Map config = [:]) {
             stage('Download Models') {
                 when { branch 'main' }
                 steps {
-                    
-                    withCredentials([string(credentialsId: 'Hug-Face', variable: 'TOKEN')]) {
-                        script {
-                            def dockerImage = "${config.dockerUser}/${config.appName}:${env.BUILD_NUMBER}"
-                            // Create a virtual environment
+                    script {
+                        // Define the global variable here so it is accessible in later stages
+                        env.DOCKER_IMAGE = "${config.dockerUser}/${config.appName}:${env.BUILD_NUMBER}"
+                        
+                        withCredentials([string(credentialsId: 'Hug-Face', variable: 'TOKEN')]) {
+                            // Create and use virtual environment
                             sh 'python3 -m venv venv'
-                            
-                            // Use the pip inside the venv
                             sh './venv/bin/pip install huggingface_hub'
                             
                             config.modelFiles.each { file ->
                                 echo "Downloading ${file.name}..."
                                 sh "mkdir -p ${file.targetDir}"
-                                // Use the python inside the venv
-                                sh """
-                                ./venv/bin/python3 -c "from huggingface_hub import hf_hub_download; \
-                                hf_hub_download(repo_id='${config.hfRepo}', \
-                                filename='${file.name}', \
-                                token='${TOKEN}', \
-                                local_dir='${file.targetDir}', \
-                                local_dir_use_symlinks=False)"
-                                """
+                                
+                                // Safely pass the token via environment variable
+                                withEnv(["TOKEN=${TOKEN}"]) {
+                                    sh '''
+                                    ./venv/bin/python3 -c "from huggingface_hub import hf_hub_download; \
+                                    hf_hub_download(repo_id='${HF_REPO}', \
+                                    filename='${FILE_NAME}', \
+                                    token='$TOKEN', \
+                                    local_dir='${TARGET_DIR}', \
+                                    local_dir_use_symlinks=False)"
+                                    '''
+                                }
                             }
                         }
                     }
@@ -44,12 +45,13 @@ def call(Map config = [:]) {
                 when { branch 'main' }
                 steps {
                     script {
-                        // The model files now exist in the workspace, so Docker COPY will find them
-                        sh "docker build -f ju.Dockerfile -t ${DOCKER_IMAGE} ."
+                        // env.DOCKER_IMAGE is now accessible here
+                        sh "docker build -f ju.Dockerfile -t ${env.DOCKER_IMAGE} ."
+                        
                         withCredentials([usernamePassword(credentialsId: 'docker-hub-creds', passwordVariable: 'PASS', usernameVariable: 'USER')]) {
                             sh 'echo $PASS | docker login -u $USER --password-stdin'
-                            sh "docker push ${DOCKER_IMAGE}"
-                            sh "docker rmi ${DOCKER_IMAGE}"
+                            sh "docker push ${env.DOCKER_IMAGE}"
+                            sh "docker rmi ${env.DOCKER_IMAGE}"
                         }
                     }
                 }
