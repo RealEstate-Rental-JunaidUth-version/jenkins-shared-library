@@ -9,11 +9,10 @@ def call(Map config = [:]) {
                 steps { 
                     script {
                         sh 'python3 -m venv venv'
-                        
-                        sh './venv/bin/pip install --upgrade pip'
                         sh './venv/bin/pip install flake8 pytest'
                         
-                        sh './venv/bin/flake8 .'
+                        sh './venv/bin/flake8 . --exclude=venv'
+                        
                         sh './venv/bin/pytest'
                     }
                 }
