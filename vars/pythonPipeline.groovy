@@ -7,9 +7,15 @@ def call(Map config = [:]) {
         stages {
             stage('Lint & Test') {
                 steps { 
-                    sh 'pip install flake8 pytest'
-                    sh 'flake8 .'
-                    sh 'pytest'
+                    script {
+                        sh 'python3 -m venv venv'
+                        
+                        sh './venv/bin/pip install --upgrade pip'
+                        sh './venv/bin/pip install flake8 pytest'
+                        
+                        sh './venv/bin/flake8 .'
+                        sh './venv/bin/pytest'
+                    }
                 }
             }
             stage('Download Models') {
