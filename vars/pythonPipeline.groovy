@@ -18,12 +18,18 @@ def call(Map config = [:]) {
                 steps {
                     withCredentials([string(credentialsId: 'Hug-Face', variable: 'TOKEN')]) {
                         script {
-                            sh 'pip install huggingface_hub'
+                            // Create a virtual environment
+                            sh 'python3 -m venv venv'
+                            
+                            // Use the pip inside the venv
+                            sh './venv/bin/pip install huggingface_hub'
+                            
                             config.modelFiles.each { file ->
-                                echo "Downloading ${file.name} to ${file.targetDir}..."
+                                echo "Downloading ${file.name}..."
                                 sh "mkdir -p ${file.targetDir}"
+                                // Use the python inside the venv
                                 sh """
-                                python3 -c "from huggingface_hub import hf_hub_download; \
+                                ./venv/bin/python3 -c "from huggingface_hub import hf_hub_download; \
                                 hf_hub_download(repo_id='${config.hfRepo}', \
                                 filename='${file.name}', \
                                 token='${TOKEN}', \
