@@ -5,7 +5,6 @@ def call(Map config = [:]) {
             DOCKER_USER = "${config.dockerUser ?: 'unknown-user'}"
             APP_NAME = "${config.appName ?: 'unknown-app'}"
             HF_REPO = "${config.hfRepo ?: ''}"
-            DOCKER_HOST = "" 
         }
         stages {
             stage('Lint & Test') {
@@ -46,6 +45,7 @@ def call(Map config = [:]) {
                         echo "Environment DOCKER_USER: ${env.DOCKER_USER}"
                         echo "Config appName: ${config.appName}"
                         echo "Environment APP_NAME: ${env.APP_NAME}"
+                        sh 'env | grep DOCKER || true'
                     }
                 }
             }
