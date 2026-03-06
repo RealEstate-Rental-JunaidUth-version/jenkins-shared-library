@@ -39,6 +39,7 @@ def call(Map config = [:]) {
                 when { branch 'main' }
                 steps {
                     script {
+                        env.DOCKER_IMAGE = dockerImage
                         sh "docker build -f ju.Dockerfile -t ${dockerImage} ."
                         withCredentials([usernamePassword(credentialsId: 'docker-hub-creds', passwordVariable: 'PASS', usernameVariable: 'USER')]) {
                             sh 'echo $PASS | docker login -u $USER --password-stdin'
