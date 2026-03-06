@@ -1,6 +1,4 @@
 def call(Map config = [:]) {
-    def dockerImage = "${config.dockerUser}/${config.appName}:${env.BUILD_NUMBER}"
-    
     pipeline {
         agent any
         stages {
@@ -39,6 +37,10 @@ def call(Map config = [:]) {
                 when { branch 'main' }
                 steps {
                     script {
+                        def dockerRepo = config.dockerUser ?: 'unknown-user'
+                        def appName = config.appName ?: 'unknown-app'
+                        def dockerImage = "${dockerRepo}/${appName}:${env.BUILD_NUMBER}"
+                        
                         env.DOCKER_IMAGE = dockerImage
                         sh "docker build -f ju.Dockerfile -t ${dockerImage} ."
                         withCredentials([usernamePassword(credentialsId: 'docker-hub-creds', passwordVariable: 'PASS', usernameVariable: 'USER')]) {
