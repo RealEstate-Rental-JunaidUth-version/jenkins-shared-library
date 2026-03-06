@@ -1,10 +1,4 @@
 def call(Map config = [:]) {
-
-    def appName = config.appName
-    def hfRepo = config.hfRepo
-    def modelFiles = config.modelFiles ?: [] 
-
-
     pipeline {
         agent any
         environment {
@@ -34,7 +28,7 @@ def call(Map config = [:]) {
                                 sh "mkdir -p ${file.targetDir}"
                                 sh """
                                 ./venv/bin/python3 -c "from huggingface_hub import hf_hub_download; \
-                                hf_hub_download(repo_id='${config.hfRepo}', \
+                                hf_hub_download(repo_id='${env.HF_REPO}', \
                                 filename='${file.name}', \
                                 token='${TOKEN}', \
                                 local_dir='${file.targetDir}', \
@@ -65,19 +59,8 @@ def call(Map config = [:]) {
                         sh "docker build -f ju.Dockerfile -t ${env.DOCKER_IMAGE} ."
                         withCredentials([usernamePassword(credentialsId: 'docker-hub-creds', passwordVariable: 'PASS', usernameVariable: 'USER')]) {
                             sh 'echo $PASS | docker login -u $USER --password-stdin'
-                            sh "docker push ${dockerImage}"
-                            sh "docker rmi ${dockerImage}"
-                        }
-                    }
-                }
-            }
-        }
-        post {
-            always { cleanWs() }
-        }
-    }
-}dockerImage}"
-                            sh "docker rmi ${dockerImage}"
+                            sh "docker push ${env.DOCKER_IMAGE}"
+                            sh "docker rmi ${env.DOCKER_IMAGE}"
                         }
                     }
                 }
