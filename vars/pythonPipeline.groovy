@@ -1,6 +1,13 @@
 def call(Map config = [:]) {
+
+    def appName = config.appName
+    def hfRepo = config.hfRepo
+    def modelFiles = config.modelFiles ?: [] 
+
+
     pipeline {
         agent any
+
         stages {
             stage('Lint & Test') {
                 steps { 
@@ -33,15 +40,23 @@ def call(Map config = [:]) {
                     }
                 }
             }
+            stage('Debug Config') {
+                steps {
+                    script {
+                        echo "Config dockerUser: ${config.dockerUser}"
+                        echo "Environment DOCKER_USER: ${env.DOCKER_USER}"
+                        echo "Config appName: ${config.appName}"
+                        echo "Environment APP_NAME: ${env.APP_NAME}"
+                    }
+                }
+            }
             stage('Build & Push') {
                 when { branch 'main' }
                 steps {
                     script {
-                        def dockerRepo = config.dockerUser ?: 'unknown-user'
-                        def appName = config.appName ?: 'unknown-app'
-                        def dockerImage = "${dockerRepo}/${appName}:${env.BUILD_NUMBER}"
-                        
+                        def dockerImage = "${env.DOCKER_USER}/${env.APP_NAME}:${env.BUILD_NUMBER}"
                         env.DOCKER_IMAGE = dockerImage
+                        
                         sh "docker build -f ju.Dockerfile -t ${dockerImage} ."
                         withCredentials([usernamePassword(credentialsId: 'docker-hub-creds', passwordVariable: 'PASS', usernameVariable: 'USER')]) {
                             sh 'echo $PASS | docker login -u $USER --password-stdin'
