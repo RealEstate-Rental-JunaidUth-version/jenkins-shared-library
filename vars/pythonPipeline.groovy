@@ -7,7 +7,12 @@ def call(Map config = [:]) {
 
     pipeline {
         agent any
-
+        environment {
+            DOCKER_USER = "${config.dockerUser ?: 'unknown-user'}"
+            APP_NAME = "${config.appName ?: 'unknown-app'}"
+            HF_REPO = "${config.hfRepo ?: ''}"
+            DOCKER_HOST = "" 
+        }
         stages {
             stage('Lint & Test') {
                 steps { 
@@ -57,10 +62,21 @@ def call(Map config = [:]) {
                         def dockerImage = "${env.DOCKER_USER}/${env.APP_NAME}:${env.BUILD_NUMBER}"
                         env.DOCKER_IMAGE = dockerImage
                         
-                        sh "docker build -f ju.Dockerfile -t ${dockerImage} ."
+                        sh "docker build -f ju.Dockerfile -t ${env.DOCKER_IMAGE} ."
                         withCredentials([usernamePassword(credentialsId: 'docker-hub-creds', passwordVariable: 'PASS', usernameVariable: 'USER')]) {
                             sh 'echo $PASS | docker login -u $USER --password-stdin'
                             sh "docker push ${dockerImage}"
+                            sh "docker rmi ${dockerImage}"
+                        }
+                    }
+                }
+            }
+        }
+        post {
+            always { cleanWs() }
+        }
+    }
+}dockerImage}"
                             sh "docker rmi ${dockerImage}"
                         }
                     }
