@@ -6,7 +6,7 @@ def call(Map config = [:]) {
             jdk 'jdk'      
         }
         environment {
-            DOCKER_IMAGE = "${config.dockerUser}/${config.appName}:${env.BUILD_NUMBER}"
+            DOCKER_IMAGE = "${config.dockerUser}/${config.appName}:${env.BUILD_NUMBER}-${env.GIT_COMMIT.take(7)}"
         }
         stages {
             stage('Test') {

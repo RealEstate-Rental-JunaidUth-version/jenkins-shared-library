@@ -53,7 +53,7 @@ def call(Map config = [:]) {
                 when { branch 'main' }
                 steps {
                     script {
-                        def dockerImage = "${env.DOCKER_USER}/${env.APP_NAME}:${env.BUILD_NUMBER}"
+                        def dockerImage = "${env.DOCKER_USER}/${env.APP_NAME}:${env.BUILD_NUMBER}-${env.GIT_COMMIT.take(7)}"
                         env.DOCKER_IMAGE = dockerImage
                         
                         sh "docker build -f ju.Dockerfile -t ${env.DOCKER_IMAGE} ."
