@@ -20,9 +20,11 @@ def call(Map config = [:]) {
                         sh "docker build -f ju.Dockerfile -t ${DOCKER_IMAGE} ."
                         withCredentials([usernamePassword(credentialsId: 'docker-hub-creds', passwordVariable: 'PASS', usernameVariable: 'USER')]) {
                             sh 'echo $PASS | docker login -u $USER --password-stdin'
-                            sh 'docker push ${DOCKER_IMAGE}'
+                            sh "docker tag ${DOCKER_IMAGE} ${config.dockerUser}/${config.appName}:latest"
+                            sh "docker push ${DOCKER_IMAGE}"
+                            sh "docker push ${config.dockerUser}/${config.appName}:latest"
                         }
-                        sh "docker rmi ${DOCKER_IMAGE}"
+                        sh "docker rmi ${DOCKER_IMAGE} ${config.dockerUser}/${config.appName}:latest"
                     }
                 }
             }
