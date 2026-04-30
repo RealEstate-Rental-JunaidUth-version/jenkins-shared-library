@@ -28,6 +28,39 @@ def call(Map config = [:]) {
                     }
                 }
             }
+
+            stage('Update GitOps Manifest') {
+                when { branch 'main' }
+                steps {
+                    script {
+                        def gitOpsRepo = "github.com/RealEstate-Rental-JunaidUth-version/K8s-Chart"
+                        def credentialsId = 'reel-estate-github-app'
+                        def newTag = "${env.BUILD_NUMBER}-${env.GIT_COMMIT.take(7)}"
+
+                        withCredentials([usernamePassword(credentialsId: credentialsId, passwordVariable: 'GIT_PASS', usernameVariable: 'GIT_USER')]) {
+                            
+                            sh 'git clone https://$GIT_USER:$GIT_PASS@' + gitOpsRepo + ' gitops-temp'
+                            dir('gitops-temp') {
+                                // TARGETED UPDATE: 
+                                // This tells yq to find the app name under 'microservices' and update its 'tag'
+                                sh "yq -i '.microservices.\"${config.appName}\".tag = \"${newTag}\"' ./values.yaml"
+
+                                sh """
+                                    git config user.email "jenkins@yourdomain.com"
+                                    git config user.name "Jenkins CI"
+                                    git add values.yaml
+                                    git commit -m "chore(deps): update ${config.appName} tag to ${newTag} [skip ci]"
+                                    git push https://${GIT_USER}:${GIT_PASS}@${gitOpsRepo} HEAD:main
+                                """
+                            }
+                            sh "rm -rf gitops-temp"
+                        }
+                    }
+                }
+            }
+            
         }
+
+        
     }
 }
