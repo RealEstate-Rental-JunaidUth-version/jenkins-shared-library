@@ -43,12 +43,12 @@ def call(Map config = [:]) {
                             dir('gitops-temp') {
                                 // TARGETED UPDATE: 
                                 // This tells yq to find the app name under 'microservices' and update its 'tag'
-                                sh "yq -i '.microservices.\"${config.appName}\".tag = \"${newTag}\"' ./values.yaml"
+                                sh "yq -i '.microservices.\"${config.appName}\".tag = \"${newTag}\"' ./values-staging.yaml"
 
                                 sh """
                                     git config user.email "jenkins@yourdomain.com"
                                     git config user.name "Jenkins CI"
-                                    git add values.yaml
+                                    git add values-staging.yaml
                                     git commit -m "chore(deps): update ${config.appName} tag to ${newTag} [skip ci]"
                                     git push https://${GIT_USER}:${GIT_PASS}@${gitOpsRepo} HEAD:main
                                 """
