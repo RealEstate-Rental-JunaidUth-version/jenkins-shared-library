@@ -9,9 +9,11 @@ def call(Map config = [:]) {
             DOCKER_IMAGE = "${config.dockerUser}/${config.appName}:${env.BUILD_NUMBER}-${env.GIT_COMMIT.take(7)}"
         }
         stages {
-            stage('Test') {
-                //steps { sh 'mvn clean test' }
-            }
+            // stage('Test') {
+            //     steps {
+            //          sh 'mvn clean test' 
+            //          }
+            // }
             stage('Build & Push') {
                 when { branch 'main' }
                 steps {
