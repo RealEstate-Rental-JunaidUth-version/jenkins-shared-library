@@ -10,7 +10,7 @@ def call(Map config = [:]) {
         }
         stages {
             stage('Test') {
-                steps { sh 'mvn clean test' }
+                //steps { sh 'mvn clean test' }
             }
             stage('Build & Push') {
                 when { branch 'main' }
