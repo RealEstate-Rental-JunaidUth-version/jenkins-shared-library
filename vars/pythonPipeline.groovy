@@ -14,6 +14,26 @@ def call(Map config = [:]) {
                     }
                 }
             }
+
+            // ==========================================
+            // DevSecOps: SonarQube Static Code Analysis & Quality Gate
+            // ==========================================
+            // stage('SonarQube Analysis') {
+            //     steps {
+            //         withSonarQubeEnv('sonar-server') {
+            //             sh 'sonar-scanner -Dsonar.projectKey=' + config.appName + ' -Dsonar.sources=.'
+            //         }
+            //     }
+            // }
+            // stage('Quality Gate') {
+            //     steps {
+            //         timeout(time: 5, unit: 'MINUTES') {
+            //             script {
+            //                 waitForQualityGate abortPipeline: true
+            //             }
+            //         }
+            //     }
+            // }
             stage('Download Models') {
                 when { branch 'main' }
                 steps {
@@ -57,6 +77,15 @@ def call(Map config = [:]) {
                         env.DOCKER_IMAGE = dockerImage
                         
                         sh "docker build -f ju.Dockerfile -t ${env.DOCKER_IMAGE} ."
+
+                        // ==========================================
+                        // DevSecOps: Trivy Container Security Vulnerability Scan
+                        // ==========================================
+                        // // Scan container image for HIGH and CRITICAL vulnerabilities
+                        // sh "trivy image --exit-code 0 --severity HIGH,CRITICAL --format table ${env.DOCKER_IMAGE}"
+                        // // Fail the build if CRITICAL CVEs are detected:
+                        // // sh "trivy image --exit-code 1 --severity CRITICAL ${env.DOCKER_IMAGE}"
+
                         withCredentials([usernamePassword(credentialsId: 'docker-hub-creds', passwordVariable: 'PASS', usernameVariable: 'USER')]) {
                             sh 'echo $PASS | docker login -u $USER --password-stdin'
                             sh "docker tag ${env.DOCKER_IMAGE} ${env.DOCKER_USER}/${env.APP_NAME}:latest"
